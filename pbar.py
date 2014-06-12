@@ -1,6 +1,7 @@
 from __future__ import division
 from __future__ import print_function
 
+import sys
 import time
 import contextlib
 
@@ -30,6 +31,7 @@ class Bar:
 
     def _overwrite(self, line):
         print("\r" + line + ' ' * max(0, self._max_length - len(line)), end="")
+        sys.stdout.flush()
         self._max_length = max(self._max_length, len(line))
 
     def update_bar(self, force=False):
