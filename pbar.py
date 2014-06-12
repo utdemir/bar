@@ -43,7 +43,7 @@ class Bar:
         step = self._step
         bar_max = self.bar_max
         completed = step / bar_max
-        bar_count = round(completed * self.bar_width)
+        bar_count = int(round(completed * self.bar_width))
         bar = (self.bar_char * bar_count) \
                  + ' ' * (self.bar_width - bar_count)
         percentage = completed * 100
