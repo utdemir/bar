@@ -5,12 +5,15 @@ import sys
 import time
 import contextlib
 
-DETAILED_BAR = "[{bar}] %{percentage:.2f} ({step}/{bar_max}) {seconds:.0f}s"
-
 class Bar:
+    DETAILED = "[{bar}] %{percentage:.2f} ({step}/{bar_max}) {seconds:.0f}s"
+    ONLY_TIMER = "{seconds:.0f}s"
+    
+    _nest_count = 0
+
     def __init__(self, subject="",
-                 bar_max=None, bar_width=10, bar_char='#',
-                 bar_template=DETAILED_BAR,
+                 bar_max=None, bar_width=20, bar_char='#',
+                 bar_template=DETAILED,
                  end=False, end_template="Done in {seconds:.2f} seconds.",
                  indent=False, indent_char=' '):
         self.subject = subject
@@ -39,7 +42,7 @@ class Bar:
         if now - self._last_update < 0.2 and not force:
             return
         self._last_update = now
-
+	
         step = self._step
         bar_max = self.bar_max
         completed = step / bar_max
@@ -53,9 +56,11 @@ class Bar:
         self._overwrite(line)
 
     def __enter__(self):
+        self._nest_count += 1
         return self
 
     def __exit__(self, *args):
+        self._nest_count -= 1
         if self.end:
             seconds = time.time() - self._started_at
             self._overwrite(self.subject + self.end_template.format(**locals()))
