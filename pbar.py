@@ -25,7 +25,8 @@ class Bar:
         self.end_template = end_template
 
         self._step = 0
-        self._last_update = self._started_at = time.time()
+        self._last_update = 0 
+        self._started_at = time.time()
         self._max_length = 0
 
     def step(self, times=1):
