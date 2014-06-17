@@ -1,9 +1,23 @@
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import sys
 import time
 import contextlib
+import unicodedata
+
+_unicode_eights = [
+    "", 
+    unicodedata.lookup("LEFT ONE EIGHTH BLOCK"),
+    unicodedata.lookup("LEFT ONE QUARTER BLOCK"),
+    unicodedata.lookup("LEFT THREE EIGHTHS BLOCK"),
+    unicodedata.lookup("LEFT HALF BLOCK"),
+    unicodedata.lookup("LEFT FIVE EIGHTHS BLOCK"),
+    unicodedata.lookup("LEFT THREE QUARTERS BLOCK"),
+    unicodedata.lookup("LEFT SEVEN EIGHTHS BLOCK"),
+    unicodedata.lookup("FULL BLOCK")
+]
 
 class Bar:
     DETAILED = "[{bar}] %{percentage:.2f} ({step}/{bar_max}) {seconds:.0f}s"
@@ -12,14 +26,13 @@ class Bar:
     _nest_count = 0
 
     def __init__(self, subject="",
-                 bar_max=None, bar_width=20, bar_char='#',
+                 bar_max=None, bar_width=20, 
                  bar_template=DETAILED,
                  end=False, end_template="Done in {seconds:.2f} seconds.",
                  indent=False, indent_char=' '):
         self.subject = subject
         self.bar_max = bar_max
         self.bar_width = bar_width
-        self.bar_char = bar_char
         self.bar_template = bar_template
         self.end = end
         self.end_template = end_template
@@ -40,16 +53,17 @@ class Bar:
 
     def update_bar(self, force=False):
         now = time.time()
-        if now - self._last_update < 0.2 and not force:
+        if now - self._last_update < 0.1 and not force:
             return
         self._last_update = now
 	
         step = self._step
         bar_max = self.bar_max
         completed = step / bar_max
-        bar_count = int(round(completed * self.bar_width))
-        bar = (self.bar_char * bar_count) \
-                 + ' ' * (self.bar_width - bar_count)
+        full_bar_count, rem = divmod(completed * self.bar_width, 1)
+        bar = int(full_bar_count) * _unicode_eights[8]
+        bar += _unicode_eights[int(rem * 8)]
+        bar += ' ' * (self.bar_width - len(bar))
         percentage = completed * 100
         seconds = now - self._started_at
 
