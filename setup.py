@@ -2,13 +2,13 @@
 
 from distutils.core import setup
 
-setup(name='pbar',
+setup(name='bar',
       version='0.1.0',
       description='Configurable progress bars/status monitors for Python console applications.',
-      url='https://github.com/utdemir/pbar',
+      url='https://github.com/utdemir/bar',
       author='Utku Demir',
       author_email='utdemir@gmail.com',
-      py_modules=['pbar'],
+      py_modules=['bar'],
       classifiers=[
           'Environment :: Other Environment',
           'Intended Audience :: Developers',
