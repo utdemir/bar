@@ -1,3 +1,5 @@
+#-*- coding: utf-8 -*-
+
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
@@ -8,19 +10,11 @@ import threading
 import contextlib
 import unicodedata
 
-_unicode_block = [
-    "",
-    unicodedata.lookup("LEFT ONE EIGHTH BLOCK"),
-    unicodedata.lookup("LEFT ONE QUARTER BLOCK"),
-    unicodedata.lookup("LEFT THREE EIGHTHS BLOCK"),
-    unicodedata.lookup("LEFT HALF BLOCK"),
-    unicodedata.lookup("LEFT FIVE EIGHTHS BLOCK"),
-    unicodedata.lookup("LEFT THREE QUARTERS BLOCK"),
-    unicodedata.lookup("LEFT SEVEN EIGHTHS BLOCK"),
-    unicodedata.lookup("FULL BLOCK")
-]
-
-_ascii = ["", "-", "="]
+_chars = {
+    "block": "  ▏▎▍▌▋▊▉█",
+    "shades": " ░▒▓█",
+    "ascii": " -=#"
+}
 
 class Bar:
     DETAILED = "[{bar}] %{percentage:.2f} ({step}/{bar_max}) Elapsed: {seconds:.0f}s ETA: {eta:.0f}s"
@@ -31,7 +25,7 @@ class Bar:
     def __init__(self, subject="",
                  bar_max=None, bar_width=20, bar_template=DETAILED,
                  end=False, end_template="Done in {seconds:.2f} seconds.",
-                 unicode=True):
+                 chars="block"):
         self.subject = subject
         self.bar_max = bar_max
         self.bar_width = bar_width
@@ -46,7 +40,7 @@ class Bar:
 
         self.timer = None
 
-        self.chars = _unicode_block if unicode else _ascii
+        self.chars = _chars[chars]
 
     def step(self, times=1):
         self._step += times
@@ -81,7 +75,7 @@ class Bar:
         full_bar_count, rem = divmod(completed * self.bar_width, 1)
         bar = int(full_bar_count) * self.chars[-1]
         bar += self.chars[int(rem * len(self.chars))]
-        bar += ' ' * (self.bar_width - len(bar))
+        bar += self.chars[0] * (self.bar_width - len(bar))
 
         line = self.subject + self.bar_template.format(**locals())
         self._overwrite(line)
