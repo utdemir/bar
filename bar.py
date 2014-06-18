@@ -23,7 +23,7 @@ _unicode_block = [
 _ascii = ["", "-", "="]
 
 class Bar:
-    DETAILED = "[{bar}] %{percentage:.2f} ({step}/{bar_max}) {seconds:.0f}s"
+    DETAILED = "[{bar}] %{percentage:.2f} ({step}/{bar_max}) Elapsed: {seconds:.0f}s ETA: {eta:.0f}s"
     ONLY_TIMER = "{seconds:.0f}s"
 
     _nest_count = 0
@@ -74,6 +74,8 @@ class Bar:
         completed = step / bar_max
         percentage = completed * 100
         seconds = now - self._started_at
+
+        eta = (seconds / step) * (bar_max - step) if step else 0
 
         # Progress Bar
         full_bar_count, rem = divmod(completed * self.bar_width, 1)
