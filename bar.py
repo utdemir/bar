@@ -46,6 +46,9 @@ class Bar:
         self._step += times
         self.update_bar()
 
+    def cancel(self):
+        self.__exit__()
+
     def _overwrite(self, line):
         print("\r" + line + ' ' * max(0, self._max_length - len(line)), end="")
         sys.stdout.flush()
