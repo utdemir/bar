@@ -13,6 +13,7 @@ import unicodedata
 _chars = {
     "block": "  ▏▎▍▌▋▊▉█",
     "shades": " ░▒▓█",
+    "braille": " ⡀⡄⡆⡇⣇⣧⣷⣿", 
     "ascii": " -=#"
 }
 
