@@ -16,22 +16,23 @@ _chars = {
     "ascii": " -=#"
 }
 
-class Bar:
-    DETAILED = "[{bar}] %{percentage:.2f} ({step}/{bar_max}) Elapsed: {seconds:.0f}s ETA: {eta:.0f}s"
-    ONLY_TIMER = "{seconds:.0f}s"
+_templates = {
+    "detailed": "[{bar}] %{percentage:.2f} ({step}/{max}) Elapsed: {seconds:.0f}s ETA: {eta:.0f}s",
+    "timer": "{seconds:.0f}s"
+}
 
+class Bar:
     _nest_count = 0
 
     def __init__(self, subject="",
-                 bar_max=None, bar_width=20, bar_template=DETAILED,
-                 end=False, end_template="Done in {seconds:.2f} seconds.",
+                 max=None, bar_width=20, template="detailed",
+                 end="Done in {seconds:.2f} seconds.",
                  chars="block"):
         self.subject = subject
-        self.bar_max = bar_max
+        self.max = max
         self.bar_width = bar_width
-        self.bar_template = bar_template
+        self.template = _templates[template]
         self.end = end
-        self.end_template = end_template
 
         self._step = 0
         self._last_update = 0
@@ -67,12 +68,12 @@ class Bar:
         self._last_update = now
 
         step = self._step
-        bar_max = self.bar_max
-        completed = step / bar_max
+        max = self.max
+        completed = step / max
         percentage = completed * 100
         seconds = now - self._started_at
 
-        eta = (seconds / step) * (bar_max - step) if step else 0
+        eta = (seconds / step) * (max - step) if step else 0
 
         # Progress Bar
         full_bar_count, rem = divmod(completed * self.bar_width, 1)
@@ -80,7 +81,7 @@ class Bar:
         bar += self.chars[int(rem * len(self.chars))]
         bar += self.chars[0] * (self.bar_width - len(bar))
 
-        line = self.subject + self.bar_template.format(**locals())
+        line = self.subject + self.template.format(**locals())
         self._overwrite(line)
 
     def __enter__(self):
@@ -93,7 +94,7 @@ class Bar:
         self.timer.cancel()
         self.update_bar(force=True)
         self._nest_count -= 1
-        if self.end:
+        if self.end is not None:
             seconds = time.time() - self._started_at
-            self._overwrite(self.subject + self.end_template.format(**locals()))
+            self._overwrite(self.subject + self.end.format(**locals()))
         print()
