@@ -1,4 +1,4 @@
-# bar
+# bar [![PyPI version](https://badge.fury.io/py/bar.svg)](http://badge.fury.io/py/bar)
 
 
 Configurable progress bars/status monitors for Python console applications.
