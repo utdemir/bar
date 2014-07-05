@@ -91,6 +91,7 @@ class ActiveBar(object):
 
         self._instances.append(self)
 
+        self._stopped = False
         self._timer = None
         self._step = 0
         self._last_step = 0
@@ -113,6 +114,8 @@ class ActiveBar(object):
         self._timer.start()
 
     def update_bar(self, force=False):
+        if self._stopped: return
+
         now = time.time()
         if now - self._last_update < 0.1 and not force:
             return
@@ -181,6 +184,7 @@ class ActiveBar(object):
     def _stop(self):
         if self._timer is  not None:
             self._timer.cancel()
+        self._stopped = True
         self.update_bar(force=True)
 
     def step(self, count=1):
