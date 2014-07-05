@@ -76,6 +76,8 @@ You can see `examples.py` for detailed examples.
 
 * **Bar.map(f, *iterables)**: Creates a bar to show progress of `map`. *iterables* should support `len`. **Warning:** This function is eager on both Python 2 and Python 3 and always returns `list`.
 
+* **bar.cancel()**: Stops updating the bar, useful for debugging.
+
 ### Constraints
 
 * You shouldn't print anything or modify standart output anyhow when a bar is in progress.
