@@ -6,50 +6,101 @@ from __future__ import unicode_literals
 
 import sys
 import time
+import copy
 import threading
-import contextlib
-import unicodedata
+from collections import deque
+
+try:
+    from shutil import get_terminal_size
+    def get_terminal_width():
+        return get_terminal_size().columns
+except ImportError:
+    import subprocess
+    def get_terminal_width():
+        return int(subprocess.check_output(["tput", "cols"]))
 
 _chars = {
     "block": "  ▏▎▍▌▋▊▉█",
     "shades": " ░▒▓█",
-    "braille": " ⡀⡄⡆⡇⣇⣧⣷⣿", 
+    "braille": " ⡀⡄⡆⡇⣇⣧⣷⣿",
     "ascii": " -=#"
 }
 
+_spinners = {
+    "simple": ("*----", "-*---", "--*--", "---*-",
+               "----*", "---*-", "--*--", "-*---"),
+    "fish": (">))'>    ", " >))'>   ", "  >))'>  ", "   >))'> ",
+             "    <'((<", "   <'((< ", "  <'((<  ", " <'((<   ")
+}
+
 _templates = {
-    "detailed": "[{bar}] %{percentage:.2f} ({step}/{max}) Elapsed: {seconds:.0f}s ETA: {eta:.0f}s",
+    "detailed": "{subject} [{progressbar}] %{percentage:.2f} Elapsed: {seconds:.0f}s ETA: {eta:.0f}s",
     "timer": "{seconds:.0f}s"
 }
 
-class Bar:
-    _nest_count = 0
+class Bar(object):
+    def __init__(self, subject="", **kwargs):
+        object.__setattr__(self, "_args", {
+            "subject"           : subject,
+            "count"             : kwargs.pop("count", 0),
+            "progressbar_width" : kwargs.pop("progressbar_width", -1),
+            "end"               : kwargs.pop("end", None)
+        })
 
-    def __init__(self, subject="",
-                 max=None, bar_width=20, template="detailed",
-                 end="Done in {seconds:.2f} seconds.",
-                 chars="block"):
-        self.subject = subject
-        self.max = max
-        self.bar_width = bar_width
-        self.template = _templates[template]
-        self.end = end
+        chars                  = kwargs.pop("chars", "block")
+        self._args["chars"]    = _chars.get(chars, chars)
 
+        template               = kwargs.pop("template", "detailed")
+        self._args["template"] = _templates.get(template, template)
+
+        spinner                = kwargs.pop("spinner", "fish")
+        self._args["spinner"]  = _spinners.get(spinner, spinner)
+
+        if kwargs:
+            raise ValueError("Invalid arguments: " + ", ".join(kwargs))
+
+    def __enter__(self):
+        return ActiveBar(**self._args)
+
+    def __exit__(self, *args):
+        bar = ActiveBar.pop_last_instance()
+        bar.exit()
+
+    def __call__(self, **kwargs):
+        d = self._args.copy()
+        d.update(kwargs)
+        return Bar(**d)
+
+    def map(self, f, *iterables):
+        l = sum(len(i) for i in iterables)
+        with self(count=l) as b:
+            list(b.map(f, *iterables))
+
+    # Make the class immutable
+    def __setattr__(self, k, v):
+        raise TypeError
+    def __delattr__(self, k, v):
+        raise TypeError
+
+class ActiveBar(object):
+    _instances = []
+
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+        self._instances.append(self)
+
+        self._timer = None
         self._step = 0
+        self._last_step = 0
         self._last_update = 0
         self._started_at = time.time()
         self._max_length = 0
 
-        self.timer = None
-
-        self.chars = _chars[chars]
-
-    def step(self, times=1):
-        self._step += times
-        self.update_bar()
-
-    def cancel(self):
-        self.__exit__()
+    @classmethod
+    def pop_last_instance(cls):
+        return cls._instances.pop()
 
     def _overwrite(self, line):
         print("\r" + line + ' ' * max(0, self._max_length - len(line)), end="")
@@ -57,10 +108,9 @@ class Bar:
         self._max_length = max(self._max_length, len(line))
 
     def _tick(self):
-        if self.timer is not None:
-            self.update_bar()
-        self.timer = threading.Timer(1, self._tick)
-        self.timer.start()
+        self.update_bar()
+        self._timer = threading.Timer(1, self._tick)
+        self._timer.start()
 
     def update_bar(self, force=False):
         now = time.time()
@@ -68,34 +118,72 @@ class Bar:
             return
         self._last_update = now
 
+        subject = self.subject if self.subject is not None \
+                               else self.subject
         step = self._step
-        max = self.max
-        completed = step / max
+        count = self.count
+        remaining_steps = count - step
+        completed = step / max(count, 0) if count else 0
         percentage = completed * 100
         seconds = now - self._started_at
 
-        eta = (seconds / step) * (max - step) if step else 0
+        seconds_per_step = (self._last_step - self._started_at) / step
+        eta = max(0, seconds_per_step  * remaining_steps)
 
-        # Progress Bar
-        full_bar_count, rem = divmod(completed * self.bar_width, 1)
-        bar = int(full_bar_count) * self.chars[-1]
-        bar += self.chars[int(rem * len(self.chars))]
-        bar += self.chars[0] * (self.bar_width - len(bar))
+        spinner = self.spinner[int(seconds * 2) % len(self.spinner)]
 
-        line = self.subject + self.template.format(**locals())
+        progressbar = self._create_progressbar(self.progressbar_width) \
+                          if self.progressbar_width > 0 \
+                          else "{progressbar}"
+
+        line = self.template.format(**locals())
+
+        if self.progressbar_width < 0:
+            width = get_terminal_width() - len(line) + len("{progressbar}")
+            line = line.format(progressbar=self._create_progressbar(width))
+
         self._overwrite(line)
 
-    def __enter__(self):
-        self.update_bar(force=True)
-        self._nest_count += 1
-        self._tick()
-        return self
+    def _create_progressbar(self, width):
+        completed = self._step / max(self.count, 0) if self.count else 0
 
-    def __exit__(self, *args):
-        self.timer.cancel()
-        self.update_bar(force=True)
-        self._nest_count -= 1
-        if self.end is not None:
-            seconds = time.time() - self._started_at
-            self._overwrite(self.subject + self.end.format(**locals()))
+        full_bar_count, rem = divmod(completed * width, 1)
+        bar = int(full_bar_count) * self.chars[-1]
+        if rem: bar += self.chars[int(rem * len(self.chars))]
+        bar = bar[:width]
+
+        empty_count = width - len(bar)
+        bar += empty_count * self.chars[0]
+
+        return bar
+
+    def watch(self, f):
+        def wrapped(*args, **kwargs):
+            f(*args, **kwargs)
+            self.step()
+        return wrapped
+
+    def map(self, f, *iterables):
+        return map(self.watch(f), *iterables)
+
+    def cancel(self):
+        self._stop()
         print()
+
+    def exit(self):
+        self._stop()
+        if self.end:
+            seconds = self.seconds = time.time() - self._started_at
+            subject = self.subject
+            self._overwrite(self.end.format(**locals()))
+        print()
+
+    def _stop(self):
+        if self._timer is  not None:
+            self._timer.cancel()
+        self.update_bar(force=True)
+
+    def step(self, count=1):
+        self._step += count
+        self._last_step = time.time()
+        self.update_bar()
