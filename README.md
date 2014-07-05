@@ -50,8 +50,8 @@ You can see `examples.py` for detailed examples.
 
 * **template** (*Default: "detailed"*): The bar itself, using Python's standart string formatting syntax. You can use the  predefined templates below, or specify your own.
 
-      "detailed": "{subject} [{progressbar}] %{percentage:.2f} Elapsed: {seconds:.0f}s ETA: {eta:.0f}s",
-      "timer": "{seconds:.0f}s"
+        "detailed": "{subject} [{progressbar}] %{percentage:.2f} Elapsed: {seconds:.0f}s ETA: {eta:.0f}s",
+        "timer": "{seconds:.0f}s"
 
     Allowed variables:
     * **subject**
