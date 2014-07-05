@@ -36,17 +36,17 @@ You can see `examples.py` for detailed examples.
 * **progressbar_width**: (*Default: -1*) Width of the progress bar. Expands to the whole line when negative.
 * **chars** (*Default: "block"*): Chars used on progress bar. You can use the  predefined characters below, or specify your own string.
 
-      "block": "  ▏▎▍▌▋▊▉█",
-      "shades": " ░▒▓█",
-      "braille": " ⡀⡄⡆⡇⣇⣧⣷⣿",
-      "ascii": " -=#"
-
+        "block": "  ▏▎▍▌▋▊▉█",
+        "shades": " ░▒▓█",
+        "braille": " ⡀⡄⡆⡇⣇⣧⣷⣿",
+        "ascii": " -=#"
+  
 * **spinner** (*Default: "fish"*): You can use the predefined ones below, or specify your own(should support `len` and integer indexing). Will be shown with 2 FPS.
 
-      "simple": ("*----", "-*---", "--*--", "---*-",
-                 "----*", "---*-", "--*--", "-*---"),
-      "fish": (">))'>    ", " >))'>   ", "  >))'>  ", "   >))'> ",
-               "    <'((<", "   <'((< ", "  <'((<  ", " <'((<   ")
+        "simple": ("*----", "-*---", "--*--", "---*-",
+                   "----*", "---*-", "--*--", "-*---"),
+        "fish": (">))'>    ", " >))'>   ", "  >))'>  ", "   >))'> ",
+                 "    <'((<", "   <'((< ", "  <'((<  ", " <'((<   ")
 
 * **template** (*Default: "detailed"*): The bar itself, using Python's standart string formatting syntax. You can use the  predefined templates below, or specify your own.
 
@@ -71,8 +71,8 @@ You can see `examples.py` for detailed examples.
 
 * **bar.map(f, *iterables)**: Maps `f` over `iterables` while stepping the bar.
 
-      def map(self, f, *iterables):
-          return map(self.watch(f), *iterables)
+        def map(self, f, *iterables):
+            return map(self.watch(f), *iterables)
 
 * **Bar.map(f, *iterables)**: Creates a bar to show progress of `map`. *iterables* should support `len`. **Warning:** This function is eager on both Python 2 and Python 3 and always returns `list`.
 
