@@ -26,7 +26,7 @@ A little taste of what it currently looks like: https://asciinema.org/a/10643
             time.sleep(0.001)
             b.step()
 
-You can see `examples.py` for detailed examples.
+See [examples.py](examples.py) for detailed examples.
 
 ### Parameters
 
