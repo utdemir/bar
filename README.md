@@ -40,7 +40,7 @@ See [examples.py](examples.py) for detailed examples.
         "shades": " ░▒▓█",
         "braille": " ⡀⡄⡆⡇⣇⣧⣷⣿",
         "ascii": " -=#"
-  
+
 * **spinner** (*Default: "fish"*): You can use the predefined ones below, or specify your own(should support `len` and integer indexing). Will be shown with 2 FPS.
 
         "simple": ("*----", "-*---", "--*--", "---*-",
