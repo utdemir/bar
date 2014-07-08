@@ -99,6 +99,8 @@ class ActiveBar(object):
         self._started_at = time.time()
         self._max_length = 0
 
+        self._tick()
+
     @classmethod
     def pop_last_instance(cls):
         return cls._instances.pop()
@@ -130,7 +132,7 @@ class ActiveBar(object):
         percentage = completed * 100
         seconds = now - self._started_at
 
-        seconds_per_step = (self._last_step - self._started_at) / step
+        seconds_per_step = (self._last_step - self._started_at) / step if step else 0
         eta = max(0, seconds_per_step  * remaining_steps)
 
         spinner = self.spinner[int(seconds * 2) % len(self.spinner)]
